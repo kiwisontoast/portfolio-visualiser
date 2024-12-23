@@ -123,6 +123,18 @@ def add_stock_to_hypothetical_portfolio():
     hypothetical_ticker_entry.delete(0, tk.END)
     hypothetical_percentage_entry.delete(0, tk.END)
 
+def update_graph():
+    # Check if there is existing data in the portfolio
+    if portfolio:
+        # Clear previous plot
+        ax.clear()
+        # Create pie chart for portfolio breakdown
+        create_portfolio_pie_chart(portfolio)
+    else:
+        # If no data, clear the plot
+        ax.clear()
+        canvas.draw()
+
 # Create and configure main window
 root = tk.Tk()
 root.title("Portfolio Visualizer")
@@ -205,6 +217,8 @@ canvas.get_tk_widget().grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, t
 # Load portfolio data
 portfolio = load_portfolio_data()
 hypothetical_portfolio = load_hypothetical_portfolio_data()
+
+update_graph()
 
 # Start the main event loop
 root.mainloop()
