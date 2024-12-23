@@ -21,6 +21,9 @@ def toggle_theme():
         ax.set_xlabel(ax.get_xlabel(), color='black')
         ax.set_ylabel(ax.get_ylabel(), color='black')
         ax.legend(facecolor='white', edgecolor='black', labelcolor='black')
+        # Update text colors for light theme
+        for text in ax.texts:
+            text.set_color('black')
     else:
         # Switch to dark theme
         sv_ttk.set_theme("dark")
@@ -33,7 +36,11 @@ def toggle_theme():
         ax.set_xlabel(ax.get_xlabel(), color='white')
         ax.set_ylabel(ax.get_ylabel(), color='white')
         ax.legend(facecolor='gray', edgecolor='white', labelcolor='white')
+        # Update text colors for dark theme
+        for text in ax.texts:
+            text.set_color('white')
     canvas.draw()
+
 
 
 # Function to save portfolio data to a file
@@ -83,7 +90,6 @@ def calculate_portfolio_value(portfolio):
         breakdown[ticker] = value
     return total_value, breakdown
 
-# Function to create pie chart for portfolio breakdown
 def create_portfolio_pie_chart(portfolio):
     total_value, breakdown = calculate_portfolio_value(portfolio)
     labels = list(breakdown.keys())
@@ -91,17 +97,23 @@ def create_portfolio_pie_chart(portfolio):
     ax.clear()
     ax.pie(sizes, labels=labels, autopct='%1.1f%%')
     ax.axis('equal')
+    # Update text colors for pie chart labels
+    for text in ax.texts:
+        text.set_color('white')
     canvas.draw()
     portfolio_value_label.config(text=f"Portfolio Value: ${total_value:.2f}")
 
-# Function to create pie chart for hypothetical portfolio breakdown
 def create_hypothetical_portfolio_pie_chart(portfolio):
     labels = list(portfolio.keys())
     sizes = list(portfolio.values())
     ax.clear()
     ax.pie(sizes, labels=labels, autopct='%1.1f%%')
     ax.axis('equal')
+    # Update text colors for pie chart labels
+    for text in ax.texts:
+        text.set_color('white')
     canvas.draw()
+
 
 # Function to add stock to portfolio
 def add_stock_to_portfolio():
@@ -153,8 +165,6 @@ frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 frame.rowconfigure(11, weight=1)
 frame.columnconfigure(0, weight=1)
 
-# Set theme
-sv_ttk.set_theme("dark")
 
 # Create UI elements
 theme_toggle_button = ttk.Button(frame, text="Switch to Light Mode", command=toggle_theme)
@@ -208,11 +218,22 @@ add_hypothetical_stock_button.grid(row=2, column=1, sticky=tk.E, pady=5)
 create_hypothetical_portfolio_button = ttk.Button(hypothetical_portfolio_frame, text="Create Hypothetical Portfolio Pie Chart", command=lambda: create_hypothetical_portfolio_pie_chart(hypothetical_portfolio))
 create_hypothetical_portfolio_button.grid(row=3, column=1, sticky=tk.E, pady=5)
 
-# Create matplotlib figure and axis
+# Set theme
+sv_ttk.set_theme("dark")
+
+# Set up the plot
 fig, ax = plt.subplots()
+fig.patch.set_facecolor('#333333')
+ax.set_facecolor('#333333')
+ax.tick_params(colors='white')
+ax.set_title(ax.get_title(), color='white')
+ax.set_xlabel(ax.get_xlabel(), color='white')
+ax.set_ylabel(ax.get_ylabel(), color='white')
+ax.legend(facecolor='gray', edgecolor='white', labelcolor='white')
 canvas = FigureCanvasTkAgg(fig, master=frame)
-canvas.draw()
-canvas.get_tk_widget().grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
+canvas_widget = canvas.get_tk_widget()
+canvas_widget.grid(row=11, column=0, columnspan=7, sticky=(tk.W, tk.E, tk.N, tk.S))
+
 
 # Load portfolio data
 portfolio = load_portfolio_data()
