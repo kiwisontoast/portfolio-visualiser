@@ -119,17 +119,51 @@ def create_hypothetical_portfolio_pie_chart(portfolio):
 def add_stock_to_portfolio():
     ticker = ticker_entry.get()
     amount = float(amount_entry.get())
-    portfolio[ticker] = amount
+    if ticker in portfolio:
+        # Add to existing amount
+        portfolio[ticker] += amount
+    else:
+        # Add new stock to portfolio
+        portfolio[ticker] = amount
     save_portfolio_data(portfolio)
     create_portfolio_pie_chart(portfolio)
     ticker_entry.delete(0, tk.END)
     amount_entry.delete(0, tk.END)
+
+def remove_stock_from_portfolio():
+    ticker = ticker_entry.get()
+    amount = float(amount_entry.get())
+    if ticker in portfolio:
+        # Remove specified amount from the stock holding
+        portfolio[ticker] -= amount
+        if portfolio[ticker] <= 0:
+            # If the amount goes to 0 or below, remove the stock from the portfolio
+            del portfolio[ticker]
+    save_portfolio_data(portfolio)
+    create_portfolio_pie_chart(portfolio)
+    ticker_entry.delete(0, tk.END)
+    amount_entry.delete(0, tk.END)
+
 
 # Function to add stock to hypothetical portfolio
 def add_stock_to_hypothetical_portfolio():
     ticker = hypothetical_ticker_entry.get()
     percentage = float(hypothetical_percentage_entry.get())
     hypothetical_portfolio[ticker] = percentage
+    save_hypothetical_portfolio_data(hypothetical_portfolio)
+    create_hypothetical_portfolio_pie_chart(hypothetical_portfolio)
+    hypothetical_ticker_entry.delete(0, tk.END)
+    hypothetical_percentage_entry.delete(0, tk.END)
+
+def remove_stock_from_hypothetical_portfolio():
+    ticker = hypothetical_ticker_entry.get()
+    percentage = float(hypothetical_percentage_entry.get())
+    if ticker in hypothetical_portfolio:
+        # Remove specified percentage from the stock holding
+        hypothetical_portfolio[ticker] -= percentage
+        if hypothetical_portfolio[ticker] <= 0:
+            # If the percentage goes to 0 or below, remove the stock from the portfolio
+            del hypothetical_portfolio[ticker]
     save_hypothetical_portfolio_data(hypothetical_portfolio)
     create_hypothetical_portfolio_pie_chart(hypothetical_portfolio)
     hypothetical_ticker_entry.delete(0, tk.END)
@@ -165,14 +199,17 @@ frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 frame.rowconfigure(11, weight=1)
 frame.columnconfigure(0, weight=1)
 
-
 # Create UI elements
 theme_toggle_button = ttk.Button(frame, text="Switch to Light Mode", command=toggle_theme)
 theme_toggle_button.grid(row=0, column=0, sticky=tk.W, pady=5)
 
+# Add text under light/dark toggle
+portfolio_label = ttk.Label(frame, text="Portfolio Add/Remove")
+portfolio_label.grid(row=1, column=0, sticky=tk.W, pady=5)
+
 # Portfolio frame
 portfolio_frame = ttk.Frame(frame)
-portfolio_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+portfolio_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
 
 # Ticker and amount inputs
 ticker_label = ttk.Label(portfolio_frame, text="Enter stock ticker:")
@@ -188,17 +225,25 @@ amount_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
 add_stock_button = ttk.Button(portfolio_frame, text="Add Stock", command=add_stock_to_portfolio)
 add_stock_button.grid(row=2, column=1, sticky=tk.E, pady=5)
 
+# Remove stock from portfolio button
+remove_stock_button = ttk.Button(portfolio_frame, text="Remove/Reduce Stock", command=remove_stock_from_portfolio)
+remove_stock_button.grid(row=3, column=1, sticky=tk.E, pady=5)
+
 # Create portfolio pie chart button
 create_portfolio_button = ttk.Button(portfolio_frame, text="Create Portfolio Pie Chart", command=lambda: create_portfolio_pie_chart(portfolio))
-create_portfolio_button.grid(row=3, column=1, sticky=tk.E, pady=5)
+create_portfolio_button.grid(row=4, column=1, sticky=tk.E, pady=5)
 
 # Portfolio value label
 portfolio_value_label = ttk.Label(portfolio_frame, text="Portfolio Value: ")
-portfolio_value_label.grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=5)
+portfolio_value_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=5)
+
+# Add text under portfolio value
+hypothetical_portfolio_label = ttk.Label(frame, text="Hypothetical Portfolio Add/Remove")
+hypothetical_portfolio_label.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=5)
 
 # Hypothetical portfolio frame
 hypothetical_portfolio_frame = ttk.Frame(frame)
-hypothetical_portfolio_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+hypothetical_portfolio_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
 
 # Hypothetical ticker and percentage inputs
 hypothetical_ticker_label = ttk.Label(hypothetical_portfolio_frame, text="Enter stock ticker:")
@@ -214,9 +259,14 @@ hypothetical_percentage_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
 add_hypothetical_stock_button = ttk.Button(hypothetical_portfolio_frame, text="Add Stock", command=add_stock_to_hypothetical_portfolio)
 add_hypothetical_stock_button.grid(row=2, column=1, sticky=tk.E, pady=5)
 
+# Remove stock from hypothetical portfolio button
+remove_hypothetical_stock_button = ttk.Button(hypothetical_portfolio_frame, text="Remove/Reduce Stock", command=remove_stock_from_hypothetical_portfolio)
+remove_hypothetical_stock_button.grid(row=3, column=1, sticky=tk.E, pady=5)
+
 # Create hypothetical portfolio pie chart button
 create_hypothetical_portfolio_button = ttk.Button(hypothetical_portfolio_frame, text="Create Hypothetical Portfolio Pie Chart", command=lambda: create_hypothetical_portfolio_pie_chart(hypothetical_portfolio))
-create_hypothetical_portfolio_button.grid(row=3, column=1, sticky=tk.E, pady=5)
+create_hypothetical_portfolio_button.grid(row=4, column=1, sticky=tk.E, pady=5)
+
 
 # Set theme
 sv_ttk.set_theme("dark")
