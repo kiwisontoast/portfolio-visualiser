@@ -41,8 +41,6 @@ def toggle_theme():
             text.set_color('white')
     canvas.draw()
 
-
-
 # Function to save portfolio data to a file
 def save_portfolio_data(portfolio):
     with open('portfolio.txt', 'w') as file:
@@ -94,26 +92,38 @@ def create_portfolio_pie_chart(portfolio):
     total_value, breakdown = calculate_portfolio_value(portfolio)
     labels = list(breakdown.keys())
     sizes = list(breakdown.values())
+    
+    # Clear and redraw the plot
     ax.clear()
-    ax.pie(sizes, labels=labels, autopct='%1.1f%%')
+
+    fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+    ax.pie(sizes, radius=5, labels=labels, autopct='%1.1f%%')
     ax.axis('equal')
-    # Update text colors for pie chart labels
+    
+    # Update text colors based on current theme
+    current_theme = sv_ttk.get_theme()
+    text_color = 'white' if current_theme == "dark" else 'black'
     for text in ax.texts:
-        text.set_color('white')
+        text.set_color(text_color)
+    
     canvas.draw()
     portfolio_value_label.config(text=f"Portfolio Value: ${total_value:.2f}")
 
 def create_hypothetical_portfolio_pie_chart(portfolio):
     labels = list(portfolio.keys())
     sizes = list(portfolio.values())
+    
     ax.clear()
-    ax.pie(sizes, labels=labels, autopct='%1.1f%%')
+    fig.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+    ax.pie(sizes, radius = 5, labels=labels, autopct='%1.1f%%')
     ax.axis('equal')
-    # Update text colors for pie chart labels
+    
+    current_theme = sv_ttk.get_theme()
+    text_color = 'white' if current_theme == "dark" else 'black'
     for text in ax.texts:
-        text.set_color('white')
+        text.set_color(text_color)
+    
     canvas.draw()
-
 
 # Function to add stock to portfolio
 def add_stock_to_portfolio():
@@ -143,7 +153,6 @@ def remove_stock_from_portfolio():
     create_portfolio_pie_chart(portfolio)
     ticker_entry.delete(0, tk.END)
     amount_entry.delete(0, tk.END)
-
 
 # Function to add stock to hypothetical portfolio
 def add_stock_to_hypothetical_portfolio():
@@ -181,34 +190,75 @@ def update_graph():
         ax.clear()
         canvas.draw()
 
+def setup_plot():
+    global fig, ax, canvas
+    fig = plt.figure(figsize=(12, 8))  # Set a reasonable default figure size
+    ax = fig.add_subplot(111)
+    
+    # Configure plot appearance
+    fig.patch.set_facecolor('#333333')
+    ax.set_facecolor('#333333')
+    ax.tick_params(colors='white')
+    
+    # Create canvas with proper configuration
+    canvas = FigureCanvasTkAgg(fig, master=graph_frame)
+    canvas_widget = canvas.get_tk_widget()
+    canvas_widget.grid(row=0, column=0, sticky="nsew")
+    
+    # Configure graph_frame grid
+    graph_frame.grid_rowconfigure(0, weight=3)
+    graph_frame.grid_columnconfigure(0, weight=2)
+
+# Add this to handle window resizing
+def on_resize(event):
+    # Update the figure size based on the new window size
+    width = event.width / 100  # Convert pixels to inches
+    height = event.height / 100
+    if hasattr(fig, 'set_size_inches'):  # Check if figure exists
+        fig.set_size_inches(width, height, forward=True)
+        canvas.draw()
+
 # Create and configure main window
 root = tk.Tk()
 root.title("Portfolio Visualizer")
 root.protocol("WM_DELETE_WINDOW", lambda: root.quit())
 
-# Set window size to 95% of screen height
+# Make the window resizable
+root.resizable(True, True)
+
+# Set initial window size to 80% of screen
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
-window_height = int(screen_height * 0.95)
-window_width = screen_width
-root.geometry(f"{window_width}x{window_height}+0+0")
+window_width = int(screen_width * 0.8)
+window_height = int(screen_height * 0.9)
+root.geometry(f"{window_width}x{window_height}")
 
-# Create and configure main frame
-frame = ttk.Frame(root, padding="10")
-frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-frame.rowconfigure(11, weight=1)
-frame.columnconfigure(0, weight=1)
+# Configure main frame with proper weight distribution
+frame = ttk.Frame(root)
+frame.grid(row=0, column=0, sticky="nsew")
+
+# Configure root grid
+root.grid_rowconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)
+
+# Create left and right frames for better organization
+left_frame = ttk.Frame(frame)
+left_frame.grid(row=0, column=0, sticky="nw", padx=10, pady=10)
+
+graph_frame = ttk.Frame(frame)
+graph_frame.grid(row=11, column=0, sticky="nsew", padx=10, pady=10)
+frame.grid_rowconfigure(11, weight=1)
 
 # Create UI elements
-theme_toggle_button = ttk.Button(frame, text="Switch to Light Mode", command=toggle_theme)
+theme_toggle_button = ttk.Button(left_frame, text="Switch to Light Mode", command=toggle_theme)
 theme_toggle_button.grid(row=0, column=0, sticky=tk.W, pady=5)
 
 # Add text under light/dark toggle
-portfolio_label = ttk.Label(frame, text="Portfolio Add/Remove")
+portfolio_label = ttk.Label(left_frame, text="Portfolio Add/Remove")
 portfolio_label.grid(row=1, column=0, sticky=tk.W, pady=5)
 
 # Portfolio frame
-portfolio_frame = ttk.Frame(frame)
+portfolio_frame = ttk.Frame(left_frame)
 portfolio_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
 
 # Ticker and amount inputs
@@ -230,7 +280,8 @@ remove_stock_button = ttk.Button(portfolio_frame, text="Remove/Reduce Stock", co
 remove_stock_button.grid(row=3, column=1, sticky=tk.E, pady=5)
 
 # Create portfolio pie chart button
-create_portfolio_button = ttk.Button(portfolio_frame, text="Create Portfolio Pie Chart", command=lambda: create_portfolio_pie_chart(portfolio))
+create_portfolio_button = ttk.Button(portfolio_frame, text="Create Portfolio Pie Chart", 
+                                   command=lambda: create_portfolio_pie_chart(portfolio))
 create_portfolio_button.grid(row=4, column=1, sticky=tk.E, pady=5)
 
 # Portfolio value label
@@ -238,11 +289,11 @@ portfolio_value_label = ttk.Label(portfolio_frame, text="Portfolio Value: ")
 portfolio_value_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=5)
 
 # Add text under portfolio value
-hypothetical_portfolio_label = ttk.Label(frame, text="Hypothetical Portfolio Add/Remove")
+hypothetical_portfolio_label = ttk.Label(left_frame, text="Hypothetical Portfolio Add/Remove")
 hypothetical_portfolio_label.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=5)
 
 # Hypothetical portfolio frame
-hypothetical_portfolio_frame = ttk.Frame(frame)
+hypothetical_portfolio_frame = ttk.Frame(left_frame)
 hypothetical_portfolio_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
 
 # Hypothetical ticker and percentage inputs
@@ -256,34 +307,28 @@ hypothetical_percentage_entry = ttk.Entry(hypothetical_portfolio_frame, width=10
 hypothetical_percentage_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
 
 # Add stock to hypothetical portfolio button
-add_hypothetical_stock_button = ttk.Button(hypothetical_portfolio_frame, text="Add Stock", command=add_stock_to_hypothetical_portfolio)
+add_hypothetical_stock_button = ttk.Button(hypothetical_portfolio_frame, text="Add Stock", 
+                                         command=add_stock_to_hypothetical_portfolio)
 add_hypothetical_stock_button.grid(row=2, column=1, sticky=tk.E, pady=5)
 
 # Remove stock from hypothetical portfolio button
-remove_hypothetical_stock_button = ttk.Button(hypothetical_portfolio_frame, text="Remove/Reduce Stock", command=remove_stock_from_hypothetical_portfolio)
+remove_hypothetical_stock_button = ttk.Button(hypothetical_portfolio_frame, text="Remove/Reduce Stock", 
+                                            command=remove_stock_from_hypothetical_portfolio)
 remove_hypothetical_stock_button.grid(row=3, column=1, sticky=tk.E, pady=5)
 
 # Create hypothetical portfolio pie chart button
-create_hypothetical_portfolio_button = ttk.Button(hypothetical_portfolio_frame, text="Create Hypothetical Portfolio Pie Chart", command=lambda: create_hypothetical_portfolio_pie_chart(hypothetical_portfolio))
+create_hypothetical_portfolio_button = ttk.Button(hypothetical_portfolio_frame, text="Create Hypothetical Portfolio Pie Chart", 
+                                                command=lambda: create_hypothetical_portfolio_pie_chart(hypothetical_portfolio))
 create_hypothetical_portfolio_button.grid(row=4, column=1, sticky=tk.E, pady=5)
-
 
 # Set theme
 sv_ttk.set_theme("dark")
 
 # Set up the plot
-fig, ax = plt.subplots()
-fig.patch.set_facecolor('#333333')
-ax.set_facecolor('#333333')
-ax.tick_params(colors='white')
-ax.set_title(ax.get_title(), color='white')
-ax.set_xlabel(ax.get_xlabel(), color='white')
-ax.set_ylabel(ax.get_ylabel(), color='white')
-ax.legend(facecolor='gray', edgecolor='white', labelcolor='white')
-canvas = FigureCanvasTkAgg(fig, master=frame)
-canvas_widget = canvas.get_tk_widget()
-canvas_widget.grid(row=11, column=0, columnspan=7, sticky=(tk.W, tk.E, tk.N, tk.S))
+setup_plot()
 
+# Bind the resize event
+graph_frame.bind('<Configure>', on_resize)
 
 # Load portfolio data
 portfolio = load_portfolio_data()
